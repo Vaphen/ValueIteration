@@ -46,6 +46,7 @@ void StateMachine::calculateQFunction()
     for(const std::shared_ptr<State> &state : _states) {
         for(const std::shared_ptr<State> &trans : state->getTransitions()) {
             _qFunction[std::make_pair(state, trans)] = calculateNewValue(state, trans);
+            
         }
     }
 }
@@ -56,13 +57,14 @@ void StateMachine::calculateQFunction()
 void StateMachine::calculateVFunction() 
 {
     for(const std::shared_ptr<State> &state : _states) {
-        double maxValue = 0.f;
+        double maxValue = -std::numeric_limits<double>::max();
         for(const std::shared_ptr<State> &trans : state->getTransitions()) {
             if(_qFunction[std::make_pair(state, trans)] > maxValue) {
                 maxValue = _qFunction[std::make_pair(state, trans)];
             }
         }
         _vFunction[state] = maxValue;
+        
     }
 }
 
@@ -90,7 +92,7 @@ double StateMachine::calculateNewValue(const std::shared_ptr<State> &curState, c
         } else {
             probability = curState->getUnpreferredTransitionProbability();
         }
-        double curResult = probability * (trans->getReward() + 0.9 * trans->getValue());
+        double curResult = probability * (trans->getReward() + _discountFactor * trans->getValue());
         newValue += curResult;
     }
     return newValue;

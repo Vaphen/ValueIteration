@@ -25,21 +25,94 @@ const std::vector<std::shared_ptr<State> >& StateMachine::getStates() const
  */
 void StateMachine::doValueIteration()
 {
-      // save all new values in this vector
-    std::vector<double> newValues;
     
-    for(auto state : _states) {
-        if(state->getReward() != 0) {
-            // if the reward is not zero, we don't update the value
-            newValues.push_back(state->getValue());
-        }else {
-            // else we perform the next iteration step and calculate the new max value
-            newValues.push_back(state->calculateNewMaxValue());
+    calculateQFunction();
+    calculateVFunction();
+
+    // update all state values
+    using pairtype = decltype(_vFunction)::value_type;
+    for(const pairtype &vPair : _vFunction) {
+        if(vPair.first->getReward() == 0) {
+            vPair.first->setValue(vPair.second);
         }
     }
-    
-    // update all values
-    for(unsigned j = 0; j < newValues.size(); j++) {
-       _states.at(j)->setValue(newValues.at(j));
+}
+
+/**
+ * @brief calculate the new value function for all states
+ */
+void StateMachine::calculateQFunction() 
+{
+    for(const std::shared_ptr<State> &state : _states) {
+        for(const std::shared_ptr<State> &trans : state->getTransitions()) {
+            _qFunction[std::make_pair(state, trans)] = calculateNewValue(*state, *trans);
+        }
     }
+}
+
+/**
+ * @brief calculate the new value function for all states using max(a)[_qFunction[s, a]]
+ */
+void StateMachine::calculateVFunction() 
+{
+    for(const std::shared_ptr<State> &state : _states) {
+        double maxValue = 0.f;
+        for(const std::shared_ptr<State> &trans : state->getTransitions()) {
+            if(_qFunction[std::make_pair(state, trans)] > maxValue) {
+                maxValue = _qFunction[std::make_pair(state, trans)];
+            }
+        }
+        _vFunction[state] = maxValue;
+    }
+}
+
+
+/**
+ * @brief calculate the new value given a specific next state (a specific transition)
+ * @param curState the current state
+ * @param nextState the state that should be visited next
+ * @return the new value of this state given the next state that should be visited
+ */
+double StateMachine::calculateNewValue(const State &curState, const State &nextState)    
+{
+    
+    // TODO: add check if nextState is successor of curState
+    double newValue = 0.f;
+    
+    for(const std::shared_ptr<State> &trans : curState.getTransitions()) {
+        double probability = 1.f;        
+        
+        if(*trans == nextState) {
+            probability = curState.getPreferredTransitionProbability();
+        } else {
+            probability = curState.getUnpreferredTransitionProbability();
+        }
+        double curResult = probability * (trans->getReward() + 0.9 * trans->getValue());
+        newValue += curResult;
+    }
+    return newValue;
+}
+
+/*
+ * Getter and setter
+ */
+
+std::map<StateActionPair, double> StateMachine::getQFunction() const
+{
+    return _qFunction;
+}
+
+std::map<std::shared_ptr<State>, double> StateMachine::getVFunction() const
+{
+    return _vFunction;
+}
+
+double StateMachine::getDiscountFactor() const
+{
+    return _discountFactor;
+}
+
+void StateMachine::setDiscountFactor(double discount) 
+{
+    _discountFactor = discount;
 }

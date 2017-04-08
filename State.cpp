@@ -36,46 +36,6 @@ void State::addNextState(const std::shared_ptr<State> nextState) {
     _transitions.push_back(std::move(nextState));
 }
 
-/**
- * @brief calculate the new optimal value for this state. The value will not be updated by this function.
- * @return the new optimal value
- */
-double State::calculateNewMaxValue() 
-{
-    double newMaxValue = std::numeric_limits<double>::lowest();
-    for(const std::shared_ptr<State> &trans : _transitions) {
-        const double newValue = calculateNewValue(*trans);
-        if(newValue > newMaxValue) newMaxValue = newValue;
-    }
-    return newMaxValue;
-}
-
-/**
- * @brief calculate the new value given a specific next state (a specific transition)
- * @param preferredState the state that should be visited next
- * @return the new value of this state given the next state that should be visited
- */
-double State::calculateNewValue(const State &preferredState)    
-{
-    double newValue = 0.f;
-    
-    for(const std::shared_ptr<State> &trans : _transitions) {
-        double probability = 1.f;        
-        
-        if(*trans == preferredState) {
-            probability = _preferredTransitionProbability;
-        } else {
-            probability = getUnpreferredTransitionProbability();
-        }
-        double curResult = probability * (trans->getReward() + 0.9 * trans->getValue());
-        newValue += curResult;
-        //std::cout << probability << " * (" << trans.getNextState()->getReward() << " + 0.9 * " << trans.getNextState()->getValue() << ") = " << curResult << std::endl;
-        
-    }
-    return newValue;
-}
-
-
 /*
  * Overloaded operators 
  */

@@ -19,10 +19,7 @@ public:
     static State create(std::string, double, double, double);
 
     void addNextState(const std::shared_ptr<State>);
-    
-    // perform one value iteration step on this state
-    double calculateNewMaxValue();
-    
+        
     
     /*
      * Getter and Setter 
@@ -57,8 +54,7 @@ private:
     std::vector<std::shared_ptr<State> > _transitions;
     
     State(std::string, double, double, double);
-   
-    double calculateNewValue(const State &nextState);
+
 };
 
 #endif

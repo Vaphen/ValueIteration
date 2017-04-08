@@ -32,6 +32,8 @@ void printValues(const StateMachine &machine)
  */
 void initialize(StateMachine &stateMachine)
 {
+    stateMachine.setDiscountFactor(0.8);
+    
     auto S0 = stateMachine.addState(State::create("S0", 0, 0, 0.7f));
     auto S1 = stateMachine.addState(State::create("S1", 0, 0, 0.7f));
     auto S2 = stateMachine.addState(State::create("S2", 0, 0, 0.7f));
@@ -92,6 +94,7 @@ int main(int argc, char **argv)
         stateMachine.doValueIteration();
     }
     
+    std::cout << stateMachine.getStates().at(4).use_count() << std::endl;
     std::cout << "Bye." << std::endl;
     
 	return 0;

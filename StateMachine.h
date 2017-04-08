@@ -42,7 +42,7 @@ private:
     // caluclate the value function of the given state using _qFunction
     void calculateVFunction();
     
-    double calculateNewValue(const State &curState, const State &nextState);
+    double calculateNewValue(const std::shared_ptr<State> &curState, const std::shared_ptr<State> &nextState);
 };
 
 #endif

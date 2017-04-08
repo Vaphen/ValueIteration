@@ -45,7 +45,7 @@ void StateMachine::calculateQFunction()
 {
     for(const std::shared_ptr<State> &state : _states) {
         for(const std::shared_ptr<State> &trans : state->getTransitions()) {
-            _qFunction[std::make_pair(state, trans)] = calculateNewValue(*state, *trans);
+            _qFunction[std::make_pair(state, trans)] = calculateNewValue(state, trans);
         }
     }
 }
@@ -73,19 +73,22 @@ void StateMachine::calculateVFunction()
  * @param nextState the state that should be visited next
  * @return the new value of this state given the next state that should be visited
  */
-double StateMachine::calculateNewValue(const State &curState, const State &nextState)    
+double StateMachine::calculateNewValue(const std::shared_ptr<State> &curState, const std::shared_ptr<State> &nextState)    
 {
+    // check if nextState is successor of curState
+    if(std::find(curState->getTransitions().begin(), curState->getTransitions().end(), nextState) == curState->getTransitions().end()) {
+        throw std::invalid_argument("Given nextState is no successor of curState.");
+    }
     
-    // TODO: add check if nextState is successor of curState
     double newValue = 0.f;
     
-    for(const std::shared_ptr<State> &trans : curState.getTransitions()) {
+    for(const std::shared_ptr<State> &trans : curState->getTransitions()) {
         double probability = 1.f;        
         
-        if(*trans == nextState) {
-            probability = curState.getPreferredTransitionProbability();
+        if(trans == nextState) {
+            probability = curState->getPreferredTransitionProbability();
         } else {
-            probability = curState.getUnpreferredTransitionProbability();
+            probability = curState->getUnpreferredTransitionProbability();
         }
         double curResult = probability * (trans->getReward() + 0.9 * trans->getValue());
         newValue += curResult;
@@ -114,5 +117,8 @@ double StateMachine::getDiscountFactor() const
 
 void StateMachine::setDiscountFactor(double discount) 
 {
+    if(discount > 1 || discount < 0) {
+        throw std::range_error("Discount must be in range [0..1]");
+    }
     _discountFactor = discount;
 }
